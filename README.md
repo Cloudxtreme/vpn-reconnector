@@ -15,6 +15,24 @@ Script was tested on/with:
 
     apt install xl2tpd openvpn openswan ppp nmap
 
+# How to use
+* `cd /usr/local
+* `git clone https://github.com/maciejkorzen/vpn-reconnector.git`
+* Edit and adjust following files:
+  * `*.template`
+  * `common.inc.sh`
+  * `options.l2tpd.client`
+  * test-if-vpn-is-working`
+  * `update-adresses`
+* `cp /usr/local/vpn-reconnector/options.l2tpd.client /etc/ppp/options.l2tpd.client`
+* Create `/etc/openvpn/vpn-reconnector-1-pass.txt` file with following content:
+```
+your login
+your password
+```
+* Create file `/usr/local/etc/vpn-reconnector-servers` with IP addresses of VPN servers. One address per line.
+* Run `start-vpns` script. You may run it in `screen`, Supervisor, systemd or any other tool of choice.
+
 # Author
 Maciej Korzeń
 maciek@korzen.org
