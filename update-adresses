@@ -1,0 +1,42 @@
+#!/bin/bash
+
+myname="$(basename $0)"
+myhome="/usr/local/vpn-reconnector"
+
+myprint()
+{
+	echo "$(date +%Y%m%d-%H%M%S): ${myname}: $*"
+}
+
+for incfile1 in common.inc.sh; do
+	if ! [ -e "${myhome}/${incfile1}" ]; then
+		myprint "ERROR: Can't find include file (${myhome}/${incfile1})!"
+		exit 1
+	fi
+	source "${myhome}/${incfile1}"
+done
+
+if [ -z "${tmpserverlist}" ]; then
+	myprint "ERROR! \$tmpserverlist is not set."
+	exit 1
+fi
+echo -n > "${tmpserverlist}"
+
+knownserverslist="/usr/local/etc/vpn-reconnector-servers"
+
+if [ -e "${knownserverslist}" ]; then
+	for i in $(cat ${knownserverslist}); do
+		echo "$i" >> "${tmpserverlist}"
+	done
+fi
+for i in ${vpndnsdomain} alpha.${vpndnsdomain} beta.${vpndnsdomain} gamma.${vpndnsdomain}; do
+	# We need to use external DNS server for name resolution because default DNS
+	# resolver might be unreachable if VPN connection breaks down without
+	# restoring original /etc/resolv.conf's content.
+	j=$(host "$i" "${publicdnsresolver}" 2>&1 | fgrep " has address " | sed -r -e 's,.* ,,')
+	if echo "$j" | egrep '^[\.0-9]{7,}$' >/dev/null; then
+		if ! fgrep -x "$j" "${tmpserverlist}" >/dev/null; then
+			echo "$j" >> "${tmpserverlist}"
+		fi
+	fi
+done

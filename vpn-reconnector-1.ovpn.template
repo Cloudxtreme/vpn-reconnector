@@ -1,0 +1,12 @@
+client
+proto tcp
+remote __SERVERIP__ !!!INSERT PORT HERE!!!
+dev tap
+key-direction 1
+persist-tun
+persist-key
+auth-user-pass vpn-reconnector-1-pass.txt
+resolv-retry 10
+ping 20
+pull
+!!!INSERT SOMETHING HERE!!!

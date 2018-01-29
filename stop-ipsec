@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ -e /var/run/xl2tpd/l2tp-control ]; then
+	echo "d vpn-connection" > /var/run/xl2tpd/l2tp-control
+fi
+ipsec auto --down L2TP-PSK >/dev/null 2>&1
+if [ -e /etc/default/l2tp-ipsec-vpn-daemon ]; then
+	service l2tp-ipsec-vpn-daemon stop >/dev/null
+fi
+service ipsec stop >/dev/null
+service xl2tpd stop >/dev/null
+sleep 5
+exit 0

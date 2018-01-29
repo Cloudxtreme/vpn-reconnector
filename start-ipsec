@@ -1,0 +1,69 @@
+#!/bin/bash
+
+server1="$1"
+myname="$(basename $0)"
+myhome="/usr/local/vpn-reconnector"
+
+myprint()
+{
+	echo "$(date +%Y%m%d-%H%M%S): ${myname}: $*"
+}
+
+for incfile1 in common.inc.sh common-start.inc.sh; do
+	if ! [ -e "${myhome}/${incfile1}" ]; then
+		myprint "ERROR: Can't find include file (${myhome}/${incfile1})!"
+		exit 1
+	fi
+	source "${myhome}/${incfile1}"
+done
+
+if [ -z "${server1}" ]; then
+	myprint "ERROR! Give server address as first argument!"
+	exit 1
+fi
+
+myprint "connecting to ${server1}"
+for file1 in /etc/ipsec.secrets /etc/xl2tpd/xl2tpd.conf /etc/ipsec.conf; do
+	cat << EOF >"${file1}"
+#############################################################
+# THIS FILE WAS GENERATED AUTOMAGICALLY!!! DO NOT MODIFY!!! #
+#############################################################
+
+EOF
+	if echo "$file1" | fgrep xl2tpd >/dev/null; then
+		sed -i -r -e 's,#,;,g' "${file1}"
+	fi
+	file1template="${myhome}/${file1##*/}.template"
+	sed -r -e "s,__SERVERIP__,${server1},g" < "${file1template}" >>"${file1}"
+done
+
+addroutetoserver "${server1}"
+service ipsec start >/dev/null
+sleep 10
+/etc/init.d/xl2tpd start >/dev/null
+sleep 3
+ipsec auto --up L2TP-PSK >/dev/null
+echo "c vpn-connection" >/var/run/xl2tpd/l2tp-control
+myprint "sleep 30"
+sleep 30
+if ! ip a | egrep ': ppp.: ' >/dev/null; then
+	myprint "ERROR! Can't find ppp interface. Problably VPN failed to establish connection."
+	exit 1
+fi
+tunnelgw=$(ip a | egrep 'inet .* peer .* scope global ppp' | awk '{ print $4; }' | sed -r -e 's,/.*,,')
+if ! echo "$tunnelgw" | egrep '^([0-9]+\.){3}[0-9]+$' >/dev/null; then
+	myprint "ERROR! Can't find router's IP address inside tunnel."
+	myprint "(Some debug output follows. Might be useful.)"
+	echo "<output of ip a>"
+	ip a
+	echo "</output of ip a>"
+	echo "<output of ip r>"
+	ip r
+	echo "</output of ip r>"
+	exit 1
+fi
+ip r a 0.0.0.0/1 via "$tunnelgw"
+ip r a 128.0.0.0/1 via "$tunnelgw"
+myprint "Connection established."
+myprint "sleep 10"
+sleep 10

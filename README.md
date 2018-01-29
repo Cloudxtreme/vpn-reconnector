@@ -1,2 +1,5 @@
-# vpn-reconnector
-Scripts to automatically connect and reconnect VPN connection.
+WORK IN PROGRESS
+
+Author:
+Maciej Korzeń
+maciek@korzen.org

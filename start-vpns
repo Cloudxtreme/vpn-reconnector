@@ -1,0 +1,67 @@
+#!/bin/bash
+
+myname="$(basename $0)"
+myhome="/usr/local/vpn-reconnector"
+
+myprint()
+{
+	echo "$(date +%Y%m%d-%H%M%S): ${myname}: $*"
+}
+
+for incfile1 in common.inc.sh; do
+	if ! [ -e "${myhome}/${incfile1}" ]; then
+		myprint "ERROR: Can't find include file (${myhome}/${incfile1})!"
+		exit 1
+	fi
+	source "${myhome}/${incfile1}"
+done
+
+while :; do
+	${myhome}/update-adresses
+
+	wcltmpserverlist=$(wc -l < ${tmpserverlist})
+
+	if [ -z "${wcltmpserverlist}" ] || [ "${wcltmpserverlist}" -lt "1" ]; then
+		myprint "ERROR: Server list is empty!"
+		exit 1
+	fi
+
+	for server1 in $(shuf < ${tmpserverlist}); do
+		for proto1 in "OpenVPN@openvpn" "IPsec/L2TP@ipsec"; do
+			proto1desc=$(echo "$proto1" | cut -d @ -f 1)
+			proto1name=$(echo "$proto1" | cut -d @ -f 2)
+			myprint "Will try to start VPN with ${proto1desc} protocol to ${server1} server."
+			myprint "Stopping VPN clients (just in case any of them is currently running)."
+			"${myhome}/stop-vpns"
+			myprint "sleep 5"
+			sleep 5
+			myprint "host ${vpndnsdomain}"
+			echo "<host output>"
+			host "${vpndnsdomain}" "${publicdnsresolver}" | fgrep ' has address '
+			echo "</host output>"
+			myprint "Starting ${proto1desc} tunnel to $server1."
+			"${myhome}/start-${proto1name}" "${server1}"
+			retcode="$?"
+			myprint "VPN start script returned code '${retcode}'."
+			myprint "('0' means that everything is OK.)"
+			if [ "$retcode" -ne 0 ]; then
+				myprint "Stopping VPN-s."
+				"${myhome}/stop-vpns"
+				sleep 5
+				continue
+			fi
+			myprint "sleep 60"
+			sleep 60
+			myprint "Monitoring VPN connection state."
+			myprint "(No output means that there are no errors and everything is working.)"
+			while :; do
+				"${myhome}/test-if-vpn-is-working" || break
+				sleep 120
+			done
+			myprint "Connection is down. Stopping VPN-s."
+			"${myhome}/stop-vpns"
+			myprint "sleep 5"
+			sleep 5
+		done
+	done
+done

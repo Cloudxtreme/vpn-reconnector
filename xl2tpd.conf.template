@@ -1,0 +1,16 @@
+;
+; Sample l2tpd configuration file
+;
+[lac vpn-connection]
+lns = __SERVERIP__
+require chap = yes
+refuse pap = yes
+require authentication = yes
+name = !!!INSERT YOUR LOGIN HERE!!!
+ppp debug = yes
+pppoptfile = /etc/ppp/options.l2tpd.client
+length bit = yes
+redial = yes
+redial timeout = 15
+max redials = 999999
+autodial = yes

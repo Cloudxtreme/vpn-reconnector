@@ -1,0 +1,30 @@
+#!/bin/bash
+
+myname=$(basename $0)
+myprint()
+{
+	echo "$(date +%Y%m%d-%H%M%S): ${myname}: $*"
+}
+
+errcnt=0
+
+if ! which ncat >/dev/null 2>&1; then
+	myprint "ERROR! Can't find 'ncat'. Please do 'sudo apt install nmap'."
+	exit 1
+fi
+
+for testsrv1 in \
+	192.168.{10..20}.1 \
+	10.55.66.{22..33}
+	do
+	if ! timeout 8 ncat -w 5 "${testsrv1}" 22 </dev/null >/dev/null 2>&1; then
+		myprint "${testsrv1} failed to respond to TCP connection on port 22"
+		errcnt=$[$errcnt + 1]
+	fi
+	sleep 5
+done
+if [ "$errcnt" -ge 5 ]; then
+	myprint "Test hosts are not responding."
+	exit 1
+fi
+exit 0

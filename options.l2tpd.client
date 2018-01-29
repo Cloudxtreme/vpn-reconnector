@@ -1,0 +1,42 @@
+ipcp-accept-local
+ipcp-accept-remote
+refuse-eap
+require-mschap-v2
+noccp
+noauth
+idle 72000
+mtu 1410
+mru 1410
+defaultroute
+usepeerdns
+debug
+lock
+connect-delay 5000
+name "!!!INSERT YOUR LOGIN HERE!!!"
+password "!!!INSERT YOUR PASSWORD HERE!!!"
+
+plugin passprompt.so
+ktune
+noproxyarp
+asyncmap 0
+crtscts
+hide-password
+modem
+noipx
+
+promptprog "/usr/bin/L2tpIPsecVpn"
+
+refuse-pap
+refuse-chap
+refuse-mschap
+
+remotename ""
+
+nobsdcomp
+nodeflate
+novj
+
+# auto restart
+persist
+holdoff 1
+maxfail 0

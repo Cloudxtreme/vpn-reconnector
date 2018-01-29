@@ -1,0 +1,6 @@
+#!/bin/bash
+
+myhome="/usr/local/vpn-reconnector"
+
+"${myhome}/stop-ipsec"
+"${myhome}/stop-openvpn"

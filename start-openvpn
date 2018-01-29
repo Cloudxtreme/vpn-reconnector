@@ -1,0 +1,57 @@
+#!/bin/bash
+
+server1="$1"
+myname="$(basename $0)"
+myhome="/usr/local/vpn-reconnector"
+
+myprint()
+{
+	echo "$(date +%Y%m%d-%H%M%S): ${myname}: $*"
+}
+
+for incfile1 in common.inc.sh common-start.inc.sh; do
+	if ! [ -e "${myhome}/${incfile1}" ]; then
+		myprint "ERROR: Can't find include file (${myhome}/${incfile1})!"
+		exit 1
+	fi
+	source "${myhome}/${incfile1}"
+done
+
+if [ -z "${server1}" ]; then
+	echo "ERROR! Give server address as first argument!"
+	exit 1
+fi
+
+openvpndir=/etc/openvpn
+if ! [ -d "${openvpndir}" ]; then
+	myprint "ERROR: Can't find ${openvpndir} directory. Is OpenVPN installed? Please install it using 'apt install openvpn' or similar command."
+	exit 1
+fi
+
+myprint "Connecting to ${server1}."
+openvpnconffile="${openvpndir}/vpn-reconnector-1.ovpn"
+cat << EOF > "${openvpnconffile}"
+#############################################################
+# THIS FILE WAS GENERATED AUTOMAGICALLY!!! DO NOT MODIFY!!! #
+#############################################################
+
+EOF
+sed -r -e "s,__SERVERIP__,${server1},g" < "${myhome}/vpn-reconnector-1.ovpn.template" >>"${openvpnconffile}"
+
+addroutetoserver "${server1}"
+cd "${openvpndir}"
+if [ "$?" != "0" ]; then
+	myprint "ERROR: Can't cd to '${openvpndir}."
+	exit 1
+fi
+myprint "Starting OpenVPN daemon."
+/usr/sbin/openvpn --daemon --config "${openvpnconffile}"
+myprint "sleep 30"
+sleep 30
+if ! ip a | egrep ': tap.: ' >/dev/null; then
+	myprint "ERROR! Probably VPN connection was not established because there's no tap interface."
+	exit 1
+fi
+myprint "OpenVPN connection established."
+myprint "sleep 10"
+sleep 10

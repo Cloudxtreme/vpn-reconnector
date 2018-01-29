@@ -1,0 +1,15 @@
+#!/bin/bash
+
+killall openvpn >/dev/null 2>&1
+for i in {1..100}; do
+	if pgrep -f /usr/sbin/openvpn >/dev/null 2>&1; then
+		sleep 1
+	else
+		break
+	fi
+done
+if pgrep -f /usr/sbin/openvpn >/dev/null; then
+	echo "ERROR! OpenVPN did not stop."
+	exit 1
+fi
+exit 0
