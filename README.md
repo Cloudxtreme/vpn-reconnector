@@ -16,7 +16,7 @@ Script was tested on/with:
     apt install xl2tpd openvpn openswan ppp nmap
 
 # How to use
-* `cd /usr/local
+* `cd /usr/local`
 * `git clone https://github.com/maciejkorzen/vpn-reconnector.git`
 * Edit and adjust following files:
   * `*.template`
