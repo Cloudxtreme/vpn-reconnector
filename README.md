@@ -22,7 +22,7 @@ Script was tested on/with:
   * `*.template`
   * `common.inc.sh`
   * `options.l2tpd.client`
-  * test-if-vpn-is-working`
+  * `test-if-vpn-is-working`
   * `update-adresses`
 * `cp /usr/local/vpn-reconnector/options.l2tpd.client /etc/ppp/options.l2tpd.client`
 * Create `/etc/openvpn/vpn-reconnector-1-pass.txt` file with following content:
